@@ -1,4 +1,4 @@
-if GetResourceState('tfd-core') ~= 'started' then return false end
+if GetResourceState('qb-core') ~= 'started' then return false end
 Debug('^1[Bridge] ^2QBCore framework detected')
 
 local QBCore = exports['qb-core']:GetCoreObject()
