@@ -167,7 +167,7 @@ lib.callback.register('bs_tebexwrapper:server:purchase', function(source, data)
     for _, cartItem in ipairs(cart) do
         totalCost = totalCost + (cartItem.price * cartItem.quantity)
         if cartItem.type == 'item' then
-             if not Player.Functions.CanCarryItem(cartItem.item_name, cartItem.quantity) then
+             if not CanCarryItem(source, cartItem.item_name, cartItem.quantity) then
                 return { success = false, message = "You don't have enough inventory space for all items." }
             end
         end
