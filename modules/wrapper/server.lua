@@ -1,9 +1,10 @@
-
+---Check for permission
 local function hasPermission(source)
     return HasPermission(source, Config.AdminPermission)
 end
 
-function createLog(source, logType, message)
+---Database shop logs
+local function createLog(source, logType, message)
     local Player = GetPlayer(source)
     if not Player then return end
     local citizenid = Player.PlayerData.citizenid
@@ -17,6 +18,7 @@ function createLog(source, logType, message)
     })
 end
 
+---Get All shop data
 local function getShopData()
     local p = promise.new()
     MySQL.Async.fetchAll('SELECT * FROM shop_categories ORDER BY display_order ASC, name ASC', {}, function(categories)
@@ -35,6 +37,7 @@ local function getShopData()
     return p
 end
 
+---Get All shop logs
 local function getShopLogs()
     local p = promise.new()
     MySQL.Async.fetchAll('SELECT * FROM shop_logs ORDER BY timestamp DESC LIMIT 200', {}, function(logs)
@@ -43,6 +46,7 @@ local function getShopLogs()
     return p
 end
 
+---Get All Player Data
 local function getAllPlayerData()
     local p = promise.new()
     MySQL.Async.fetchAll([[
@@ -67,6 +71,7 @@ local function getAllPlayerData()
     return p
 end
 
+---Get Player Diamonds
 local function getPlayerDiamonds(license)
     local p = promise.new()
     MySQL.Async.fetchAll('SELECT diamonds FROM player_diamonds WHERE license = @license', { ['@license'] = license }, function(result)
@@ -76,6 +81,21 @@ local function getPlayerDiamonds(license)
     return p
 end
 
+---Start Test Vehicle Delete Timer
+---@param vehicleNetId integer | number
+RegisterNetEvent('bs_tebexwrapper:server:startDeleteTimer', function(vehicleNetId)
+    local vehicle = NetworkGetEntityFromNetworkId(vehicleNetId)
+    -- Wrap the wait in a thread so it doesn't block
+    CreateThread(function()
+        Wait(Config.TestDriveDuration * 1000)
+        if DoesEntityExist(vehicle) then
+            DeleteEntity(vehicle)
+        end
+    end)
+end)
+
+---Fetch All Data
+---@param source integer | number
 lib.callback.register('bs_tebexwrapper:server:fetchData', function(source)
     local Player = GetPlayer(source)
     if not Player then return end
@@ -94,11 +114,16 @@ lib.callback.register('bs_tebexwrapper:server:fetchData', function(source)
     }
 end)
 
+---Fetch All Players Data
+---@param source integer | number
 lib.callback.register('bs_tebexwrapper:server:getAllPlayersFromDB', function(source)
     if not hasPermission(source) then return end
     return Citizen.Await(getAllPlayerData())
 end)
 
+---Shop Admin Actions
+---@param source integer | number
+---@param data table<{ action: string, payload: table }>
 lib.callback.register('bs_tebexwrapper:server:adminAction', function(source, data)
     if not hasPermission(source) then return { success = false, message = "Insufficient permissions." } end
     local action, payload = data.action, data.payload
@@ -135,6 +160,9 @@ lib.callback.register('bs_tebexwrapper:server:adminAction', function(source, dat
     return { success = true, message = "Action completed successfully." }
 end)
 
+---Shop Modify Diamonds
+---@param source integer | number
+---@param data table<{ identifier: string, amount: number, targetName: string, action: string }>
 lib.callback.register('bs_tebexwrapper:server:modifyDiamonds', function(source, data)
     if not hasPermission(source) then return { success = false, message = "Insufficient permissions." } end
     local targetLicense = data.identifier
@@ -156,6 +184,9 @@ lib.callback.register('bs_tebexwrapper:server:modifyDiamonds', function(source, 
     return { success = true, message = "Player balance updated.", players = updatedPlayers }
 end)
 
+---Shop Item Purchase
+---@param source integer | number
+---@param data table<{ cart: table }>
 lib.callback.register('bs_tebexwrapper:server:purchase', function(source, data)
     local Player = GetPlayer(source)
     if not Player then return { success = false, message = "Player not found." } end
@@ -218,7 +249,7 @@ lib.callback.register('bs_tebexwrapper:server:purchase', function(source, data)
                 for i = 1, cartItem.quantity do
                     local plate = GeneratePlate()
                     local finalModsJson = json.encode({}) -- Empty mods table
-                    
+
                     -- Vehicle is spawned, not stored. `garage` is nil and `state` is 1 (out).
                     local vehicleValues = {
                         license = Player.PlayerData.license, citizenid = Player.PlayerData.citizenid, vehicle = vehicleModel,
@@ -263,6 +294,9 @@ lib.callback.register('bs_tebexwrapper:server:purchase', function(source, data)
     return { success = true, message = "Purchase processed successfully!", newBalance = newBalance }
 end)
 
+---Shop Validate Test Drive
+---@param source integer | number
+---@param vehicleSpawnCode table<{ vehicleSpawnCode: string }>
 lib.callback.register('bs_tebexwrapper:server:validateTestDrive', function(source, vehicleSpawnCode)
     if not Config.TestDriveEnabled then
         return { allowed = false, message = "Test drives are currently disabled." }
@@ -272,69 +306,9 @@ lib.callback.register('bs_tebexwrapper:server:validateTestDrive', function(sourc
     return { allowed = true }
 end)
 
-RegisterNetEvent('bs_tebexwrapper:server:startDeleteTimer', function(vehicleNetId)
-    local vehicle = NetworkGetEntityFromNetworkId(vehicleNetId)
-    -- Wrap the wait in a thread so it doesn't block
-    CreateThread(function()
-        Wait(Config.TestDriveDuration * 1000)
-        if DoesEntityExist(vehicle) then
-            DeleteEntity(vehicle)
-        end
-    end)
-end)
-
----[[ FIXED: Removed the incorrect, duplicate function that caused the error. ]]
-
----[[ FIXED: Rewrote this command to use modern oxmysql syntax. ]]
-RegisterCommand('purchase_package_tebex', function(source, args)
-	if source == 0 then
-        -- This command runs from console, so we wrap it in a thread to use Await/Sync calls
-        CreateThread(function()
-            if not args or not args[1] then
-                print('^1[bs_tebexwrapper] Error: purchase_package_tebex was called with no arguments.^0')
-                return
-            end
-            
-            local success, dec = pcall(json.decode, args[1])
-            if not success or not dec then
-                print('^1[bs_tebexwrapper] Error: Could not decode Tebex JSON.^0')
-                return
-            end
-
-            -- Tebex can send transactionId or transid, support both
-            local tbxid = dec.transactionId or dec.transid 
-            local packageName = dec.packageName or dec.packagename
-            
-            if not tbxid or not packageName then
-                print('^1[bs_tebexwrapper] Error: Tebex JSON missing transactionId or packageName.^0')
-                return
-            end
-
-            local result = MySQL.Sync.fetchAll('SELECT * FROM codes WHERE code = @code', {['@code'] = tbxid})
-            
-            if result and result[1] then
-                local packagetable = json.decode(result[1].packagename)
-                table.insert(packagetable, packageName)
-                local rowsChanged = MySQL.Sync.execute('UPDATE codes SET packagename = ? WHERE code = ?', {json.encode(packagetable), tbxid})
-                if rowsChanged > 0 then
-                    -- SendToDiscord('purchase_logs', 'Purchase Logs', '`'..packageName..'` was just added to existing redeem code: `'..tbxid..'`.', 1752220)
-                else
-                    -- SendToDiscord('error_logs', 'Error Logs', '`'..tbxid..'` was not updated in the database. Please check for errors!', 15158332)
-                end
-            else
-                local packTab = {packageName}
-                MySQL.Sync.execute("INSERT INTO codes (code, packagename) VALUES (?, ?)", {tbxid, json.encode(packTab)})
-                -- SendToDiscord('purchase_logs', 'Purchase Logs', '`'..packageName..'` was just purchased and inserted into the database under redeem code: `'..tbxid..'`.', 1752220)
-                print('^2Purchase '..tbxid..' was successfully inserted into the database.^0')
-            end
-        end)
-	else
-		print(GetPlayerName(source)..' tried to give themself a store code.')
-		-- SendToDiscord('exploit_logs', 'Attempted Exploit', GetPlayerName(source)..' tried to give themself a store code!', 15158332)
-	end
-end, false)
-
-
+---Redeem Diamonds From Tebex
+---@param source integer | number
+---@param data table<{ code: string }>
 lib.callback.register('bs_tebexwrapper:server:redeemCode', function(source, data)
     local Player =  GetPlayer(source)
     if not Player then
@@ -385,3 +359,51 @@ lib.callback.register('bs_tebexwrapper:server:redeemCode', function(source, data
         newBalance = newBalance
     }
 end)
+
+RegisterCommand('purchase_package_tebex', function(source, args)
+	if source == 0 then
+        -- This command runs from console, so we wrap it in a thread to use Await/Sync calls
+        CreateThread(function()
+            if not args or not args[1] then
+                print('^1[bs_tebexwrapper] Error: purchase_package_tebex was called with no arguments.^0')
+                return
+            end
+
+            local success, dec = pcall(json.decode, args[1])
+            if not success or not dec then
+                print('^1[bs_tebexwrapper] Error: Could not decode Tebex JSON.^0')
+                return
+            end
+
+            -- Tebex can send transactionId or transid, support both
+            local tbxid = dec.transactionId or dec.transid 
+            local packageName = dec.packageName or dec.packagename
+
+            if not tbxid or not packageName then
+                print('^1[bs_tebexwrapper] Error: Tebex JSON missing transactionId or packageName.^0')
+                return
+            end
+
+            local result = MySQL.Sync.fetchAll('SELECT * FROM codes WHERE code = @code', {['@code'] = tbxid})
+
+            if result and result[1] then
+                local packagetable = json.decode(result[1].packagename)
+                table.insert(packagetable, packageName)
+                local rowsChanged = MySQL.Sync.execute('UPDATE codes SET packagename = ? WHERE code = ?', {json.encode(packagetable), tbxid})
+                if rowsChanged > 0 then
+                    -- SendToDiscord('purchase_logs', 'Purchase Logs', '`'..packageName..'` was just added to existing redeem code: `'..tbxid..'`.', 1752220)
+                else
+                    -- SendToDiscord('error_logs', 'Error Logs', '`'..tbxid..'` was not updated in the database. Please check for errors!', 15158332)
+                end
+            else
+                local packTab = {packageName}
+                MySQL.Sync.execute("INSERT INTO codes (code, packagename) VALUES (?, ?)", {tbxid, json.encode(packTab)})
+                -- SendToDiscord('purchase_logs', 'Purchase Logs', '`'..packageName..'` was just purchased and inserted into the database under redeem code: `'..tbxid..'`.', 1752220)
+                print('^2Purchase '..tbxid..' was successfully inserted into the database.^0')
+            end
+        end)
+	else
+		print(GetPlayerName(source)..' tried to give themself a store code.')
+		-- SendToDiscord('exploit_logs', 'Attempted Exploit', GetPlayerName(source)..' tried to give themself a store code!', 15158332)
+	end
+end, false)

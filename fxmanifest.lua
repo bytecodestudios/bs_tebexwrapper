@@ -13,15 +13,15 @@ shared_scripts {
 
 client_scripts {
     'bridge/**/client/*.lua',
-    'client/**/*.lua'
+    'modules/**/client.lua'
 }
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
-    'shared/sv_config.lua',
+    'shared/config_server.lua',
     'bridge/utils/server/*.lua',
     'bridge/**/server/*.lua',
-    'server/**/*.lua'
+    'modules/**/server.lua'
 }
 
 ui_page 'web/build/index.html'

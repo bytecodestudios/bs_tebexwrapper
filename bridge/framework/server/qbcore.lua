@@ -3,18 +3,26 @@ Debug('^1[Bridge] ^2QBCore framework detected')
 
 local QBCore = exports['qb-core']:GetCoreObject()
 
+---Check permission
+---@param source number | integer
+---@param permission string
 function HasPermission(source, permission)
     return QBCore.Functions.HasPermission(source, permission)
 end
 
+---Get Player Data
+---@param src number | integer
 function GetPlayer(src)
     return QBCore.Functions.GetPlayer(src)
 end
 
-function DoesItemExist(itemName)
-    return QBCore.Shared.Items[itemName] ~= nil
+---Check if item exists
+---@param item string | integer
+function DoesItemExist(item)
+    return QBCore.Shared.Items[item] ~= nil
 end
 
+---Generate Plate Number
 function GeneratePlate()
     local plate = nil
     local isPlateTaken = true
@@ -33,6 +41,8 @@ function GeneratePlate()
     return plate
 end
 
+---Get Vehicle Data
+---@param vehicleModel string | integer
 function GetVehicleData(vehicleModel)
     if not vehicleModel or type(vehicleModel) ~= 'string' then
         return nil

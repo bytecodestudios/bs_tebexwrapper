@@ -10,6 +10,8 @@ Config.AdminPermission = 'admin' -- 'god', 'admin', 'mod'
 
 -- Command to open the shop
 Config.OpenCommand = 'diamondshop'
+Config.CommandHelp = 'Tebex Wrapper'
+Config.Keybind = 'F9'
 
 Config.DefaultGarageForPurchases = 'pillboxgarage'
 Config.Packages = {
