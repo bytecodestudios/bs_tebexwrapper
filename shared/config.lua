@@ -15,7 +15,7 @@ Config.Keybind = 'F9'
 
 Config.DefaultGarageForPurchases = 'pillboxgarage'
 Config.Packages = {
-	 -- Exact package name from tebex
+	-- ["Exact package name from tebex"] = AMOUNT_OF_DIAMONDS
 	["1000 Diamond"] = 1000,
 }
 
@@ -23,11 +23,10 @@ Config.Packages = {
 Config.TestDriveEnabled = true
 
 -- The location where the test drive vehicle will spawn. The player will be teleported into it.
--- You can get coordinates using an in-game tool.
 Config.TestDriveLocation = vector4(-986.77, -2982.61, 13.95, 351.74) -- Default: A parking spot at LSIA
 
 -- Duration in seconds that the test drive vehicle will exist before being automatically deleted.
 Config.TestDriveDuration = 10 -- 2 minutes
 
-
-Config.Spawn_Purchased_Vehicle_Location  = vector4(227.28, -801.94, 30.6, 160.27)
+-- The location where the purchased vehicle will spawn.
+Config.SpawnPurchasedVehicleLocation  = vector4(227.28, -801.94, 30.6, 160.27)

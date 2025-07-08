@@ -1,9 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './components/App.tsx';
+import App from './components/App';
 import './index.css';
-import { VisibilityProvider } from './providers/VisibilityProvider.tsx';
-import { isEnvBrowser } from './utils/misc.ts';
+import { VisibilityProvider } from './providers/VisibilityProvider';
+import { isEnvBrowser } from './utils/misc';
 
 // --- MOCK DATA AND BROWSER SETUP ---
 if (isEnvBrowser()) {

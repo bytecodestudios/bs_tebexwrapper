@@ -53,7 +53,7 @@ RegisterNetEvent('bs_tebexwrapper:client:spawnPurchasedVehicle', function(vehicl
     CreateThread(function()
         RequestModel(vehicleModel)
         local playerPed = PlayerPedId()
-        local coords = Config.Spawn_Purchased_Vehicle_Location 
+        local coords = Config.SpawnPurchasedVehicleLocation 
         local vehicle = CreateVehicle(vehicleModel, coords.x, coords.y, coords.z, coords.w, true, true)
         SetVehicleNumberPlateText(vehicle, plate)
         SetVehicleFuelLevel(vehicle, 100.0)
