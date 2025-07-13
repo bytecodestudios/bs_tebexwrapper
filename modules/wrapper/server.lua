@@ -172,10 +172,12 @@ lib.callback.register('bs_tebexwrapper:server:modifyDiamonds', function(source, 
     if data.action == 'add' then
         MySQL.Async.execute('INSERT INTO player_diamonds (license, diamonds) VALUES (@license, @amount) ON DUPLICATE KEY UPDATE diamonds = diamonds + @amount', { ['@license'] = targetLicense, ['@amount'] = amount })
         createLog(source, 'admin_give_diamonds', ('Gave %s diamonds to %s'):format(amount, targetName))
+        SendToDiscord('admin_logs', 'Admin Action: Diamonds Given', nil, 16753920, {{ name = "Admin", value = "```" ..GetPlayerName(source).. "```", inline = true },{ name = "Target Player", value = "```"..targetName.."```", inline = true },{ name = "Amount Given", value = "```"..tostring(amount).. "```", inline = true },})
     elseif data.action == 'remove' then
         local affectedRows = MySQL.Sync.execute('UPDATE player_diamonds SET diamonds = diamonds - @amount WHERE license = @license AND diamonds >= @amount', { ['@license'] = targetLicense, ['@amount'] = amount })
         if affectedRows == 0 then return { success = false, message = "Player does not have enough diamonds." } end
         createLog(source, 'admin_take_diamonds', ('Took %s diamonds from %s'):format(amount, targetName))
+        SendToDiscord('admin_logs', 'Admin Action: Diamonds Removed', nil, 16753920, {{ name = "Admin", value =  "```" ..GetPlayerName(source).. "```", inline = true },{ name = "Target Player", value = "```" ..targetName.. "```", inline = true },{ name = "Amount Removed", value = "```" ..tostring(amount).. "```", inline = true }})
     else
         return { success = false, message = "Invalid action." }
     end
@@ -347,8 +349,7 @@ lib.callback.register('bs_tebexwrapper:server:redeemCode', function(source, data
     MySQL.Sync.execute('DELETE FROM codes WHERE code = @code', { ['@code'] = codeToRedeem })
     local logMessage = ('Redeemed code "%s" for %d diamonds.'):format(codeToRedeem, totalDiamondsToGive)
     createLog(source, 'redeem_code', logMessage)
-    -- FIXED: Changed 'logMessage' to the variable to send the actual message.
-	-- SendToDiscord('redeem_logs', 'Redeem Code', logMessage, 65280)
+	SendToDiscord('redeem_logs', 'Redeem Code', logMessage, 65280)
     TriggerClientEvent('bs_tebexwrapper:client:refreshData', -1)
 
     local newBalance = Citizen.Await(getPlayerDiamonds(license))
@@ -391,19 +392,19 @@ RegisterCommand('purchase_package_tebex', function(source, args)
                 table.insert(packagetable, packageName)
                 local rowsChanged = MySQL.Sync.execute('UPDATE codes SET packagename = ? WHERE code = ?', {json.encode(packagetable), tbxid})
                 if rowsChanged > 0 then
-                    -- SendToDiscord('purchase_logs', 'Purchase Logs', '`'..packageName..'` was just added to existing redeem code: `'..tbxid..'`.', 1752220)
+                    SendToDiscord('purchase_logs', 'Purchase Logs', '`'..packageName..'` was just added to existing redeem code: `'..tbxid..'`.', 1752220)
                 else
-                    -- SendToDiscord('error_logs', 'Error Logs', '`'..tbxid..'` was not updated in the database. Please check for errors!', 15158332)
+                    SendToDiscord('error_logs', 'Error Logs', '`'..tbxid..'` was not updated in the database. Please check for errors!', 15158332)
                 end
             else
                 local packTab = {packageName}
                 MySQL.Sync.execute("INSERT INTO codes (code, packagename) VALUES (?, ?)", {tbxid, json.encode(packTab)})
-                -- SendToDiscord('purchase_logs', 'Purchase Logs', '`'..packageName..'` was just purchased and inserted into the database under redeem code: `'..tbxid..'`.', 1752220)
+                SendToDiscord('purchase_logs', 'New Tebex Purchase', nil, 1752220, {{ name = "Package Purchased", value = "```" .. packageName .. "```", inline = false },{ name = "Transaction ID / Redeem Code", value = "```" .. tbxid .. "```", inline = false }})
                 print('^2Purchase '..tbxid..' was successfully inserted into the database.^0')
             end
         end)
 	else
 		print(GetPlayerName(source)..' tried to give themself a store code.')
-		-- SendToDiscord('exploit_logs', 'Attempted Exploit', GetPlayerName(source)..' tried to give themself a store code!', 15158332)
+        SendToDiscord('exploit_logs', 'Attempted Exploit Detected', nil, 15158332, {{ name = "Player Name", value = '```' ..GetPlayerName(source).. '```', inline = true }, { name = "Server ID", value = '```' ..source.. '```', inline = true }, { name = "Details", value = '```Attempted to trigger an event to grant a store code without authorization.```', inline = false }})
 	end
 end, false)
