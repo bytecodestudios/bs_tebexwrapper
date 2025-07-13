@@ -361,7 +361,8 @@ lib.callback.register('bs_tebexwrapper:server:redeemCode', function(source, data
     }
 end)
 
-RegisterCommand('purchase_package_tebex', function(source, args)
+
+RegisterCommand('package_purchase', function(source, args)
 	if source == 0 then
         -- This command runs from console, so we wrap it in a thread to use Await/Sync calls
         CreateThread(function()
