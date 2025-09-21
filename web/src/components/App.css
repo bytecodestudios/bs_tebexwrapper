@@ -1589,3 +1589,62 @@
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--bg-lighter); /* Makes the handle lighter on hover */
 }
+
+.item-quantity-controls {
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    width: 90px;
+    height: 30px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 4px;
+}
+
+.item-quantity-controls button {
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 4px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+}
+
+.item-quantity-controls .minus-btn {
+    background-color: var(--color-danger);
+}
+
+.item-quantity-controls .minus-btn:hover:not(:disabled) {
+    background-color: var(--color-danger-hover);
+    transform: scale(1.05);
+}
+
+.item-quantity-controls .plus-btn {
+    background-color: var(--color-success);
+}
+.item-quantity-controls .plus-btn:hover:not(:disabled) {
+    background-color: var(--color-success-hover);
+    transform: scale(1.05);
+}
+
+.item-quantity-controls button:disabled {
+    background: var(--bg-medium);
+    color: var(--color-text-dim);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.item-quantity-controls span {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-base);
+}

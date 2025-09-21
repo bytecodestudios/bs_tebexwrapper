@@ -261,7 +261,7 @@ const App: React.FC = () => {
         }
     };
 
-    const updateCartQuantity = (id: number, change: number) => setCart(p => p.map(i => i.id === id ? { ...i, quantity: Math.max(1, i.quantity + change) } : i).filter(i => i.quantity > 0));
+    const updateCartQuantity = (id: number, change: number) => setCart(p => p.map(i => i.id === id ? { ...i, quantity: i.quantity + change } : i).filter(i => i.quantity > 0));
     const removeFromCart = (id: number) => setCart(p => p.filter(i => i.id !== id));
     
     const handleTestDrive = async (vehicleSpawnCode: string) => {
@@ -342,19 +342,19 @@ const App: React.FC = () => {
     const filteredLogs = useMemo(() => logs.filter(log => logFilter === 'all' || (logFilter === 'player' && log.log_type === 'purchase') || (logFilter === 'admin' && (log.log_type.startsWith('admin_'))) || (logFilter === 'test_drive' && log.log_type === 'test_drive')), [logs, logFilter]);
     const filteredPlayers = useMemo(() => managedPlayers.filter(p => p.name.toLowerCase().includes(playerSearchTerm.toLowerCase()) || p.identifier.toLowerCase().includes(playerSearchTerm.toLowerCase())), [managedPlayers, playerSearchTerm]);
     
-    const renderHomePage = () => { 
-        const isItemDisabled = (item: Item) => { 
-            if (item.stock === 0) return true; 
-            if (item.stock === -1) return false; 
-            const itemInCart = cart.find(cartItem => cartItem.id === item.id); 
-            return itemInCart && itemInCart.quantity >= item.stock; 
+    const renderHomePage = () => {
+        const isItemDisabled = (item: Item) => {
+            if (item.stock === 0) return true;
+            if (item.stock === -1) return false;
+            const itemInCart = cart.find(cartItem => cartItem.id === item.id);
+            return itemInCart && itemInCart.quantity >= item.stock;
         };
-        const getItemButtonText = (item: Item) => { 
-            if (item.stock === 0) return 'Out of Stock'; 
-            if (isItemDisabled(item)) return 'Max in Cart'; 
-            return 'Add'; 
-        }; 
-
+        const getItemButtonText = (item: Item) => {
+            if (item.stock === 0) return 'Out of Stock';
+            if (isItemDisabled(item)) return 'Max in Cart';
+            return 'Add';
+        };
+    
         return (
             <div key={selectedCategory ? `category-${selectedCategory.id}` : 'category-grid'} className="view-container">
                 {!selectedCategory ? (
@@ -377,25 +377,46 @@ const App: React.FC = () => {
                             <div className="search-container"><FaSearch className="search-icon" /><input type="text" className="search-bar" placeholder="Search this category..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
                         </div>
                         <div className="items-panel">
-                            {selectedCategory.items.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase())).map(item => (
-                                <div key={item.id} className={`item-card ${isItemDisabled(item) ? 'disabled' : ''}`}>
-                                    <StockDisplay stock={item.stock} />
-                                    <div className="item-image-container"><ImageWithFallback src={item.image_url} alt={item.name} fallbackText={item.name} /></div>
-                                    <div className="item-info">
-                                        <h4 className="item-name">{item.name}</h4>
-                                        <p className="item-desc">{item.description}</p>
-                                        <div className="item-footer">
-                                            <div className="item-price"><FaGem /><span>{item.price.toLocaleString()}</span></div>
-                                            <div className="item-actions">
-                                                {config.testDriveEnabled && item.type === 'vehicle' && (
-                                                    <button className="test-drive-btn" onClick={() => handleTestDrive(item.item_name)}><FaCar size={12} /> Test Drive</button>
-                                                )}
-                                                <button className="add-to-cart-btn" onClick={() => addToCart(item)} disabled={isItemDisabled(item)}>{getItemButtonText(item)}</button>
+                            {selectedCategory.items.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase())).map(item => {
+                                const itemInCart = cart.find(cartItem => cartItem.id === item.id);
+                                const currentQuantity = itemInCart ? itemInCart.quantity : 0;
+                                const isMaxStock = item.stock !== -1 && currentQuantity >= item.stock;
+    
+                                return (
+                                    <div key={item.id} className={`item-card ${isItemDisabled(item) ? 'disabled' : ''}`}>
+                                        <StockDisplay stock={item.stock} />
+                                        <div className="item-image-container"><ImageWithFallback src={item.image_url} alt={item.name} fallbackText={item.name} /></div>
+                                        <div className="item-info">
+                                            <h4 className="item-name">{item.name}</h4>
+                                            <p className="item-desc">{item.description}</p>
+                                            <div className="item-footer">
+                                                <div className="item-price"><FaGem /><span>{item.price.toLocaleString()}</span></div>
+                                                <div className="item-actions">
+                                                    {config.testDriveEnabled && item.type === 'vehicle' && (
+                                                        <button className="test-drive-btn" onClick={() => handleTestDrive(item.item_name)}><FaCar size={12} /> Test Drive</button>
+                                                    )}
+    
+                                                    {currentQuantity === 0 ? (
+                                                        <button className="add-to-cart-btn" onClick={() => addToCart(item)} disabled={isItemDisabled(item)}>
+                                                            {getItemButtonText(item)}
+                                                        </button>
+                                                    ) : (
+                                                    <div className="item-quantity-controls">
+                                                        <button className="minus-btn" onClick={() => updateCartQuantity(item.id, -1)}>
+                                                            <FaMinus />
+                                                        </button>
+                                                        <span>{currentQuantity}</span>
+                                                        <button className="plus-btn" onClick={() => updateCartQuantity(item.id, 1)} disabled={isMaxStock}>
+                                                            <FaPlus />
+                                                        </button>
+                                                    </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </>
                 )}
