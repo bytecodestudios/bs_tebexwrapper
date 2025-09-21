@@ -22,25 +22,6 @@ function DoesItemExist(item)
     return QBCore.Shared.Items[item] ~= nil
 end
 
----Generate Plate Number
-function GeneratePlate()
-    local plate = nil
-    local isPlateTaken = true
-    while isPlateTaken do
-        plate = ('%s%s%s%s'):format(
-            QBCore.Shared.RandomInt(1),
-            QBCore.Shared.RandomStr(2),
-            QBCore.Shared.RandomInt(3),
-            QBCore.Shared.RandomStr(2)
-        ):upper()
-        local result = MySQL.scalar.await('SELECT plate FROM player_vehicles WHERE plate = ?', { plate })
-        if not result then
-            isPlateTaken = false
-        end
-    end
-    return plate
-end
-
 ---Get Vehicle Data
 ---@param vehicleModel string | integer
 function GetVehicleData(vehicleModel)
