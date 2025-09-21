@@ -158,6 +158,7 @@ const App: React.FC = () => {
     const [config, setConfig] = useState<ShopConfig>({ testDriveEnabled: false });
     const [categories, setCategories] = useState<Category[]>([]);
     const [cart, setCart] = useState<CartItem[]>([]);
+    const [isCartLoading, setIsCartLoading] = useState(false);
     const [logs, setLogs] = useState<Log[]>([]);
     const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -233,6 +234,13 @@ const App: React.FC = () => {
             showRedeemFeedback('error', result.message || 'An unknown error occurred.');
         }
     };
+    
+    const LoadingSpinner = () => (
+    <div className="loading-overlay">
+        <div className="loading-spinner"></div>
+        <p className="loading-text">Loading Cart...</p>
+    </div>
+    );
     
     const handlePurchase = useCallback(async () => {
         const result = await fetchNui<{ success: boolean, message: string, newBalance?: number }>('purchase', { cart });
@@ -335,6 +343,16 @@ const App: React.FC = () => {
         handleAdminAction(action, { id }, `${type.charAt(0).toUpperCase() + type.slice(1)} '${name}' deleted.`);
         setDeleteTarget(null);
     };
+    
+    const handleOpenCart = () => {
+            if (page === 'cart') return;
+            setIsCartLoading(true);
+            setPage('cart');
+            setTimeout(() => {
+               setIsCartLoading(false);
+            }, 500
+        );
+    };
 
     const allItems = useMemo(() => categories.flatMap(cat => cat.items || []), [categories]);
     const cartTotal = useMemo(() => cart.reduce((t, i) => t + i.price * i.quantity, 0), [cart]);
@@ -342,7 +360,7 @@ const App: React.FC = () => {
     const filteredLogs = useMemo(() => logs.filter(log => logFilter === 'all' || (logFilter === 'player' && log.log_type === 'purchase') || (logFilter === 'admin' && (log.log_type.startsWith('admin_'))) || (logFilter === 'test_drive' && log.log_type === 'test_drive')), [logs, logFilter]);
     const filteredPlayers = useMemo(() => managedPlayers.filter(p => p.name.toLowerCase().includes(playerSearchTerm.toLowerCase()) || p.identifier.toLowerCase().includes(playerSearchTerm.toLowerCase())), [managedPlayers, playerSearchTerm]);
     const [currentPage, setCurrentPage] = useState(1);
-    const ITEMS_PER_PAGE = 6;
+    const ITEMS_PER_PAGE = 12;
     const renderHomePage = () => { 
         const isItemDisabled = (item: Item) => { 
             if (item.stock === 0) return true; 
@@ -404,7 +422,7 @@ const App: React.FC = () => {
                                                     {currentQuantity === 0 ? (
                                                         <button className="add-to-cart-btn" onClick={() => addToCart(item)} disabled={isItemDisabled(item)}>{getItemButtonText(item)}</button>
                                                     ) : (
-                                                        <div className="item-quantity-controls">
+                                                        <div className="item-quantity-controls-wrapper">
                                                             <button className="minus-btn" onClick={() => updateCartQuantity(item.id, -1)}><FaMinus /></button>
                                                             <span>{currentQuantity}</span>
                                                             <button className="plus-btn" onClick={() => updateCartQuantity(item.id, 1)} disabled={isMaxStock}><FaPlus /></button>
@@ -428,8 +446,8 @@ const App: React.FC = () => {
             </div>
         );
     };
-
-    const renderCartPage = () => { 
+    
+    const renderCartPage = () => {
         if (cart.length === 0) return (
             <div className="cart-empty-state">
                 <FaShoppingCart size={60} className="empty-cart-icon" />
@@ -437,34 +455,31 @@ const App: React.FC = () => {
                 <p>Looks like you haven't added anything to your cart yet.</p>
                 <button className="back-to-shop-btn" onClick={() => { setPage('home'); setSelectedCategory(null); }}><FaStore /> Continue Shopping</button>
             </div>
-        ); 
+        );
         return (
             <div className="cart-page-reworked">
                 <h2 className="cart-page-title">Your Shopping Cart</h2>
                 <div className="cart-content-layout">
                     <div className="cart-items-panel-reworked">
-                        <div className="cart-items-header">
-                            <div className="header-product">Product</div>
-                            <div className="header-quantity">Quantity</div>
-                            <div className="header-subtotal">Subtotal</div>
-                            <div className="header-remove"></div>
-                        </div>
                         <div className="cart-items-list">{cart.map(item => (
                             <div key={item.id} className='cart-item-reworked'>
-                                <div className="cart-item-product">
-                                    <div className='cart-item-image-container'><ImageWithFallback src={item.image_url} alt={item.name} fallbackText={item.name} /></div>
-                                    <div className='cart-item-info'>
-                                        <div className='cart-item-name'>{item.name}</div>
-                                        <div className='cart-item-price-each'><FaGem /> {item.price.toLocaleString()} each</div>
+                                <div className='cart-item-image-container'>
+                                    <ImageWithFallback src={item.image_url} alt={item.name} fallbackText={item.name} />
+                                </div>
+                                <div className='cart-item-info'>
+                                    <div className='cart-item-name'>{item.name}</div>
+                                    <div className='cart-item-price-each'><FaGem /> {item.price.toLocaleString()} each</div>
+                                </div>
+    
+                                <div className="cart-item-controls-group">
+                                    <div className='cart-quantity-controls'>
+                                        <button onClick={() => updateCartQuantity(item.id, -1)} disabled={item.quantity <= 1}><FaMinus /></button>
+                                        <span>{item.quantity}</span>
+                                        <button onClick={() => updateCartQuantity(item.id, 1)} disabled={item.stock !== -1 && item.quantity >= item.stock}><FaPlus /></button>
                                     </div>
+                                    <div className="cart-item-subtotal"><FaGem /> {(item.price * item.quantity).toLocaleString()}</div>
+                                    <button className='remove-from-cart-btn' onClick={() => removeFromCart(item.id)}><FaTrash /></button>
                                 </div>
-                                <div className='cart-quantity-controls'>
-                                    <button onClick={() => updateCartQuantity(item.id, -1)} disabled={item.quantity <= 1}><FaMinus /></button>
-                                    <span>{item.quantity}</span>
-                                    <button onClick={() => updateCartQuantity(item.id, 1)} disabled={item.stock !== -1 && item.quantity >= item.stock}><FaPlus /></button>
-                                </div>
-                                <div className="cart-item-subtotal"><FaGem /> {(item.price * item.quantity).toLocaleString()}</div>
-                                <div className="cart-item-remove"><button className='remove-from-cart-btn' onClick={() => removeFromCart(item.id)}><FaTrash /></button></div>
                             </div>
                         ))}</div>
                     </div>
@@ -528,14 +543,15 @@ const App: React.FC = () => {
         );
     }
 
-    const renderPage = () => {
-        switch (page) {
-            case 'home': return renderHomePage();
-            case 'cart': return renderCartPage();
-            case 'admin': return player.isAdmin ? renderAdminPage() : null;
-            default: return null;
-        }
-    };
+const renderPage = () => {
+    switch (page) {
+        case 'home': return renderHomePage();
+        case 'cart':
+            return isCartLoading ? <LoadingSpinner /> : renderCartPage();
+        case 'admin': return player.isAdmin ? renderAdminPage() : null;
+        default: return null;
+    }
+};
 
     return (
         <div className="shop-overlay">
@@ -574,7 +590,7 @@ const App: React.FC = () => {
                         <button
                             title="View Cart"
                             className={`header-action-btn ${page === 'cart' ? 'active' : ''}`}
-                            onClick={() => setPage('cart')}
+                            onClick={handleOpenCart}
                         >
                             <FaShoppingCart />
                             {cartCount > 0 && <span className="cart-count-badge">{cartCount}</span>}
