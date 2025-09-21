@@ -341,19 +341,25 @@ const App: React.FC = () => {
     const cartCount = useMemo(() => cart.reduce((s, i) => s + i.quantity, 0), [cart]);
     const filteredLogs = useMemo(() => logs.filter(log => logFilter === 'all' || (logFilter === 'player' && log.log_type === 'purchase') || (logFilter === 'admin' && (log.log_type.startsWith('admin_'))) || (logFilter === 'test_drive' && log.log_type === 'test_drive')), [logs, logFilter]);
     const filteredPlayers = useMemo(() => managedPlayers.filter(p => p.name.toLowerCase().includes(playerSearchTerm.toLowerCase()) || p.identifier.toLowerCase().includes(playerSearchTerm.toLowerCase())), [managedPlayers, playerSearchTerm]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 6;
+    const renderHomePage = () => { 
+        const isItemDisabled = (item: Item) => { 
+            if (item.stock === 0) return true; 
+            if (item.stock === -1) return false; 
+            const itemInCart = cart.find(cartItem => cartItem.id === item.id); 
+            return itemInCart && itemInCart.quantity >= item.stock; 
+        };
+        const getItemButtonText = (item: Item) => { 
+            if (item.stock === 0) return 'Out of Stock'; 
+            if (isItemDisabled(item)) return 'Max in Cart'; 
+            return 'Add'; 
+        }; 
     
-    const renderHomePage = () => {
-        const isItemDisabled = (item: Item) => {
-            if (item.stock === 0) return true;
-            if (item.stock === -1) return false;
-            const itemInCart = cart.find(cartItem => cartItem.id === item.id);
-            return itemInCart && itemInCart.quantity >= item.stock;
-        };
-        const getItemButtonText = (item: Item) => {
-            if (item.stock === 0) return 'Out of Stock';
-            if (isItemDisabled(item)) return 'Max in Cart';
-            return 'Add';
-        };
+        const filteredItems = selectedCategory ? selectedCategory.items.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase())) : [];
+        const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+        const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+        const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
     
         return (
             <div key={selectedCategory ? `category-${selectedCategory.id}` : 'category-grid'} className="view-container">
@@ -362,7 +368,7 @@ const App: React.FC = () => {
                         <h2 className="home-rework-header">Store Categories</h2>
                         <div className="category-grid">
                             {categories.map((cat, index) => (
-                                <div key={cat.id} className="category-card-rework" onClick={() => setSelectedCategory(cat)} style={{ animationDelay: `${index * 50}ms` }}>
+                                <div key={cat.id} className="category-card-rework" onClick={() => { setSelectedCategory(cat); setCurrentPage(1); }} style={{ animationDelay: `${index * 50}ms` }}>
                                     <div className="category-card-logo-container"><ImageWithFallback src={cat.logo_url} alt={cat.name} fallbackText={cat.name} className="category-card-logo" /></div>
                                     <div className="category-card-overlay">{cat.name}</div>
                                 </div>
@@ -374,10 +380,10 @@ const App: React.FC = () => {
                         <div className="item-view-header">
                             <button className="back-button" onClick={() => setSelectedCategory(null)}><FaArrowLeft /> Back</button>
                             <h2 className="item-view-title">{selectedCategory.name}</h2>
-                            <div className="search-container"><FaSearch className="search-icon" /><input type="text" className="search-bar" placeholder="Search this category..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
+                            <div className="search-container"><FaSearch className="search-icon" /><input type="text" className="search-bar" placeholder="Search this category..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} /></div>
                         </div>
                         <div className="items-panel">
-                            {selectedCategory.items.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase())).map(item => {
+                            {currentItems.map(item => {
                                 const itemInCart = cart.find(cartItem => cartItem.id === item.id);
                                 const currentQuantity = itemInCart ? itemInCart.quantity : 0;
                                 const isMaxStock = item.stock !== -1 && currentQuantity >= item.stock;
@@ -395,21 +401,14 @@ const App: React.FC = () => {
                                                     {config.testDriveEnabled && item.type === 'vehicle' && (
                                                         <button className="test-drive-btn" onClick={() => handleTestDrive(item.item_name)}><FaCar size={12} /> Test Drive</button>
                                                     )}
-    
                                                     {currentQuantity === 0 ? (
-                                                        <button className="add-to-cart-btn" onClick={() => addToCart(item)} disabled={isItemDisabled(item)}>
-                                                            {getItemButtonText(item)}
-                                                        </button>
+                                                        <button className="add-to-cart-btn" onClick={() => addToCart(item)} disabled={isItemDisabled(item)}>{getItemButtonText(item)}</button>
                                                     ) : (
-                                                    <div className="item-quantity-controls">
-                                                        <button className="minus-btn" onClick={() => updateCartQuantity(item.id, -1)}>
-                                                            <FaMinus />
-                                                        </button>
-                                                        <span>{currentQuantity}</span>
-                                                        <button className="plus-btn" onClick={() => updateCartQuantity(item.id, 1)} disabled={isMaxStock}>
-                                                            <FaPlus />
-                                                        </button>
-                                                    </div>
+                                                        <div className="item-quantity-controls">
+                                                            <button className="minus-btn" onClick={() => updateCartQuantity(item.id, -1)}><FaMinus /></button>
+                                                            <span>{currentQuantity}</span>
+                                                            <button className="plus-btn" onClick={() => updateCartQuantity(item.id, 1)} disabled={isMaxStock}><FaPlus /></button>
+                                                        </div>
                                                     )}
                                                 </div>
                                             </div>
@@ -418,6 +417,12 @@ const App: React.FC = () => {
                                 );
                             })}
                         </div>
+                        <Pagination 
+                            itemsPerPage={ITEMS_PER_PAGE}
+                            totalItems={filteredItems.length}
+                            paginate={setCurrentPage}
+                            currentPage={currentPage}
+                        />
                     </>
                 )}
             </div>
@@ -594,6 +599,37 @@ const App: React.FC = () => {
                 />
             </div>
         </div>
+    );
+};
+
+const Pagination: React.FC<{
+    itemsPerPage: number;
+    totalItems: number;
+    paginate: (pageNumber: number) => void;
+    currentPage: number;
+}> = ({ itemsPerPage, totalItems, paginate, currentPage }) => {
+    const pageNumbers = [];
+
+    for (let i = 1; i <= Math.ceil(totalItems / itemsPerPage); i++) {
+        pageNumbers.push(i);
+    }
+
+    if (pageNumbers.length <= 1) {
+        return null;
+    }
+
+    return (
+        <nav className="pagination-container">
+            <ul className="pagination-list">
+                {pageNumbers.map(number => (
+                    <li key={number} className={`pagination-item ${currentPage === number ? 'active' : ''}`}>
+                        <button onClick={() => paginate(number)} className="pagination-link">
+                            {number}
+                        </button>
+                    </li>
+                ))}
+            </ul>
+        </nav>
     );
 };
 
