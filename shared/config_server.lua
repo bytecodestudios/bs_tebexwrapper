@@ -8,11 +8,12 @@ Config.Packages = {
 	["1000 Diamond"] = 1000,
 }
 
+Config.PlateFormat = "NLLNNNLL"   -- 1 number, 2 letters, 3 numbers, 2 letters
+-- Config.PlateFormat = "ABCNNN"     -- Always starts with "ABC", then 3 random numbers
+-- Config.PlateFormat = "NNNNLL"     -- 4 numbers followed by 2 letters
+
 -- Set to true to enable the test drive feature for vehicles, false to disable it.
 Config.TestDriveEnabled = true
--- Duration in seconds that the test drive vehicle will exist before being automatically deleted.
-Config.TestDriveDuration = 10 -- 2 minutes
-
 
 Config.DiscordLog = true
 

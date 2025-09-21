@@ -81,18 +81,6 @@ local function getPlayerDiamonds(license)
     return p
 end
 
----Start Test Vehicle Delete Timer
----@param vehicleNetId integer | number
-RegisterNetEvent('bs_tebexwrapper:server:startDeleteTimer', function(vehicleNetId)
-    local vehicle = NetworkGetEntityFromNetworkId(vehicleNetId)
-    -- Wrap the wait in a thread so it doesn't block
-    CreateThread(function()
-        Wait(Config.TestDriveDuration * 1000)
-        if DoesEntityExist(vehicle) then
-            DeleteEntity(vehicle)
-        end
-    end)
-end)
 
 ---Fetch All Data
 ---@param source integer | number
@@ -304,7 +292,6 @@ lib.callback.register('bs_tebexwrapper:server:validateTestDrive', function(sourc
         return { allowed = false, message = "Test drives are currently disabled." }
     end
     createLog(source, 'test_drive', ('Requested test drive for: %s'):format(vehicleSpawnCode))
-    Notify(source, "Your test drive vehicle has arrived. It will be returned in " .. (Config.TestDriveDuration / 60) .. " minutes.", "primary")
     return { allowed = true }
 end)
 
