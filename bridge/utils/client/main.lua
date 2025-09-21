@@ -24,3 +24,12 @@ function GiveKeys(plate)
         TriggerEvent("vehiclekeys:client:SetOwner", plate)
     end
 end
+
+
+function AddTextUI(text, options)
+    return lib.showTextUI(text, options)
+end
+
+function HideTextUI()
+    return lib.hideTextUI()
+end
