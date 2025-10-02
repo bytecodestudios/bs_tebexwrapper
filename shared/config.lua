@@ -18,5 +18,5 @@ Config.TestDriveDuration = 10 -- 2 minutes
 -- The location where the test drive vehicle will spawn. The player will be teleported into it.
 Config.TestDriveLocation = vector4(-986.77, -2982.61, 13.95, 351.74) -- Default: A parking spot at LSIA
 
--- The location where the purchased vehicle will spawn.
-Config.SpawnPurchasedVehicleLocation  = vector4(227.28, -801.94, 30.6, 160.27)
+Config.ClaimPedLocation = vector4(220.5488, -810.9670, 29.6303, 332.5128) 
+Config.ClaimPedModel = 's_m_y_valet_01' 
