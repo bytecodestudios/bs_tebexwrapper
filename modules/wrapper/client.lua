@@ -106,7 +106,8 @@ RegisterNetEvent('bs_tebexwrapper:client:spawnPurchasedVehicle', function(vehicl
                 end
             }
         })
-         Notify("Your vehicle is ready for pickup! Aim at the valet to claim it.", "info", 8000) 
+         Notify("Your vehicle is ready for pickup! Aim at the valet to claim it.", "info", 8000)
+    end)
 end)
 
 ---Command to Open Shop
