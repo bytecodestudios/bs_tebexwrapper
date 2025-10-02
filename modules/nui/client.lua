@@ -1,3 +1,9 @@
+RegisterNetEvent('bs_tebexwrapper:client:refreshData', function()
+    SendNUIMessage({
+        action = 'forceRefresh'
+    })
+end)
+
 RegisterNUICallback('close', function(_, cb)
     CloseShop()
     cb('ok')
@@ -111,7 +117,7 @@ function EndTestDrive(vehicle, playerPed, originalCoords)
         end
     end
     DoScreenFadeOut(500)
-    Citizen.Wait(600) 
+    Citizen.Wait(600)
     if IsPedInAnyVehicle(playerPed, false) then
         TaskLeaveVehicle(playerPed, GetVehiclePedIsIn(playerPed, false), 0)
         Citizen.Wait(1000)
