@@ -13,3 +13,6 @@ This resource provides a modern and feature-rich Tebex store experience directly
 *   **Inventory Integration:** Supports ox_inventory, qb-inventory, and qs-inventory.
 *   **Discord Logging:** Integrated Discord logging for purchases and other events.
 *   **Easy Configuration:** Simple and well-documented configuration files.
+
+### Credits
+- [Nass](https://github.com/najeetpie) (some bits and parts of code is used from [nass_serverstore](https://github.com/najeetpie/nass_tebexstore))
