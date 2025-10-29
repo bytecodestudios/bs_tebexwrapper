@@ -13,7 +13,7 @@ Config.Keybind = 'F9'
 Config.DefaultGarageForPurchases = 'pillboxgarage'
 
 -- Duration in seconds that the test drive vehicle will exist before being automatically deleted.
-Config.TestDriveDuration = 10 -- 2 minutes
+Config.TestDriveDuration = 10 -- 10 seconds
 
 -- The location where the test drive vehicle will spawn. The player will be teleported into it.
 Config.TestDriveLocation = vector4(-986.77, -2982.61, 13.95, 351.74) -- Default: A parking spot at LSIA

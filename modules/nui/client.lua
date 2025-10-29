@@ -68,7 +68,7 @@ RegisterNUICallback('startTestDrive', function(data, cb)
             GiveKeys("TESTDRIVE")
             local ended = false
             Citizen.CreateThread(function()
-                local timeLeft = 20
+                local timeLeft = Config.TestDriveDuration 
                 AddTextUI(("🕒 Test drive ends in: %ss"):format(timeLeft))
 
                 while timeLeft > 0 and not ended do
