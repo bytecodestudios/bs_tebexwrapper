@@ -10,9 +10,11 @@ This resource provides a modern and feature-rich Tebex store experience directly
 
 *   **In-Game Store:** A clean and modern NUI for browsing and purchasing Tebex packages.
 *   **Framework Support:** Compatible with popular frameworks like QB-Core and Qbox.
-*   **Inventory Integration:** Supports ox_inventory, qb-inventory, and qs-inventory.
+*   **Inventory Integration:** Supports ox_inventory and qb-inventory.
 *   **Discord Logging:** Integrated Discord logging for purchases and other events.
 *   **Easy Configuration:** Simple and well-documented configuration files.
 
+## Documents
+ [ByteCode Studios (Tebex Wrapper)](https://bytecode-studios.gitbook.io/org/scripts/tebex-wrapper) 
 ### Credits
 - [Nass](https://github.com/najeetpie) (some bits and parts of code is used from [nass_serverstore](https://github.com/najeetpie/nass_tebexstore))
